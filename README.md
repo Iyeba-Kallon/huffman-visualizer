@@ -2,7 +2,7 @@
 
 A visually impressive, interactive tool for understanding the **Huffman Coding** algorithm—one of the most famous methods for lossless data compression.
 
-## 🚀 How to Run
+##  How to Run
 
 1.  **Directly**: Open [index.html](index.html) in any modern web browser.
 2.  **Using Terminal (Windows)**:
@@ -14,7 +14,7 @@ A visually impressive, interactive tool for understanding the **Huffman Coding**
     npx serve .
     ```
 
-## 🧠 How Huffman Coding Works
+##  How Huffman Coding Works
 
 Huffman coding is a greedy algorithm that assigns variable-length codes to input characters. Characters that appear more frequently are assigned shorter binary codes, while less frequent characters get longer codes. This results in an overall reduction in the total number of bits required to store the data.
 
