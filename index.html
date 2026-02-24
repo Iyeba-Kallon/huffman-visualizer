@@ -22,7 +22,17 @@
         <section class="card fade-in" style="animation-delay: 0.1s;">
             <h2> Input Text</h2>
             <textarea id="input-text" placeholder="Type something to compress..."></textarea>
-            <button id="compress-btn">Compress & Visualize</button>
+
+            <div class="btn-group">
+                <button id="compress-btn">Compress & Visualize</button>
+                <button id="step-btn" class="secondary-btn">Next Step Building</button>
+            </div>
+
+            <div class="file-input-wrapper">
+                <button class="secondary-btn">Import .txt File</button>
+                <input type="file" id="import-file" accept=".txt">
+            </div>
+
             <div class="char-info">
                 <span>Chars: <strong id="total-chars">0</strong></span>
                 <span>Unique: <strong id="unique-chars">0</strong></span>
