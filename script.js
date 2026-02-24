@@ -1,3 +1,7 @@
+// --- State Management for Step Building ---
+let pq = [];
+let treeBuilt = false;
+
 // --- Huffman Algorithm Logic ---
 class Node {
     constructor(char, freq, left = null, right = null) {
@@ -5,6 +9,7 @@ class Node {
         this.freq = freq;
         this.left = left;
         this.right = right;
+        this.id = Math.random().toString(36).substr(2, 9); // For D3 keys
     }
 }
 
@@ -16,21 +21,34 @@ function buildFrequencyMap(text) {
     return freqMap;
 }
 
+function initPQ(freqMap) {
+    pq = Object.entries(freqMap).map(([char, freq]) => new Node(char, freq));
+    pq.sort((a, b) => a.freq - b.freq);
+    treeBuilt = false;
+}
+
 function buildHuffmanTree(freqMap) {
-    const priorityQueue = Object.entries(freqMap).map(([char, freq]) => new Node(char, freq));
-
-    // Simple sorting for priority queue (min-heap would be better for O(n log n), but for visualizer O(n^2) is fine and easier to animate later)
-    while (priorityQueue.length > 1) {
-        priorityQueue.sort((a, b) => a.freq - b.freq);
-
-        const left = priorityQueue.shift();
-        const right = priorityQueue.shift();
-
-        const internalNode = new Node(null, left.freq + right.freq, left, right);
-        priorityQueue.push(internalNode);
+    initPQ(freqMap);
+    while (pq.length > 1) {
+        stepMerge();
     }
+    treeBuilt = true;
+    return pq[0];
+}
 
-    return priorityQueue[0];
+function stepMerge() {
+    if (pq.length < 2) {
+        treeBuilt = true;
+        return pq[0];
+    }
+    pq.sort((a, b) => a.freq - b.freq);
+
+    const left = pq.shift();
+    const right = pq.shift();
+
+    const internalNode = new Node(null, left.freq + right.freq, left, right);
+    pq.push(internalNode);
+    return internalNode;
 }
 
 function generateCodes(node, prefix = "", codeMap = {}) {
@@ -49,6 +67,10 @@ function generateCodes(node, prefix = "", codeMap = {}) {
 // --- UI Logic ---
 const inputArea = document.getElementById('input-text');
 const compressBtn = document.getElementById('compress-btn');
+const stepBtn = document.getElementById('step-btn');
+const importFile = document.getElementById('import-file');
+const exportBtn = document.getElementById('export-btn');
+
 const totalCharsEl = document.getElementById('total-chars');
 const uniqueCharsEl = document.getElementById('unique-chars');
 const origSizeEl = document.getElementById('orig-size');
@@ -61,38 +83,80 @@ const codeTableBody = document.querySelector('#code-table tbody');
 const outputBox = document.getElementById('output-text');
 const copyBtn = document.getElementById('copy-btn');
 
-compressBtn.addEventListener('click', () => {
+let currentRoot = null;
+let currentCodeMap = {};
+
+function runFullCompression() {
     const text = inputArea.value;
     if (!text) return alert("Please enter some text!");
 
-    // 1. Stats and Basic Logic
     const freqMap = buildFrequencyMap(text);
-    const uniqueChars = Object.keys(freqMap).length;
-    const totalChars = text.length;
+    initPQ(freqMap);
+    currentRoot = buildHuffmanTree(freqMap);
+    currentCodeMap = generateCodes(currentRoot);
 
-    totalCharsEl.textContent = totalChars;
-    uniqueCharsEl.textContent = uniqueChars;
+    updateUI(text, freqMap, currentCodeMap);
+    visualizeTree(currentRoot);
+}
 
-    // 2. Build Tree and Codes
-    const root = buildHuffmanTree(freqMap);
-    const codeMap = generateCodes(root);
+compressBtn.addEventListener('click', runFullCompression);
 
-    // 3. Update Tables
-    updateFreqTable(freqMap, totalChars);
-    updateCodeTable(codeMap);
+stepBtn.addEventListener('click', () => {
+    const text = inputArea.value;
+    if (!text) return alert("Please enter some text!");
 
-    // 4. Calculate Compression Stats
-    updateStats(text, codeMap);
-
-    // 5. Encoded Output
-    let encodedString = "";
-    for (const char of text) {
-        encodedString += codeMap[char];
+    if (!pq.length || treeBuilt) {
+        const freqMap = buildFrequencyMap(text);
+        initPQ(freqMap);
+        updateFreqTable(freqMap, text.length);
+        outputBox.innerHTML = "Building tree step-by-step...";
+        visualizePQ(pq);
+        return;
     }
-    outputBox.textContent = encodedString;
 
-    // 6. Tree Visualization
-    visualizeTree(root);
+    if (pq.length > 1) {
+        stepMerge();
+        visualizePQ(pq);
+        if (pq.length === 1) {
+            treeBuilt = true;
+            currentRoot = pq[0];
+            currentCodeMap = generateCodes(currentRoot);
+            updateUI(text, buildFrequencyMap(text), currentCodeMap);
+            visualizeTree(currentRoot);
+        }
+    }
+});
+
+function updateUI(text, freqMap, codeMap) {
+    totalCharsEl.textContent = text.length;
+    uniqueCharsEl.textContent = Object.keys(freqMap).length;
+
+    updateFreqTable(freqMap, text.length);
+    updateCodeTable(codeMap);
+    updateStats(text, codeMap);
+    updateEncodedOutput(text, codeMap);
+}
+
+// File Import
+importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        inputArea.value = e.target.result;
+        runFullCompression();
+    };
+    reader.readAsText(file);
+});
+
+// File Export
+exportBtn.addEventListener('click', () => {
+    const blob = new Blob([outputBox.innerText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'compressed_output.bin';
+    a.click();
 });
 
 function updateFreqTable(freqMap, total) {
@@ -105,10 +169,10 @@ function updateFreqTable(freqMap, total) {
         const weight = ((freq / total) * 100).toFixed(1) + "%";
 
         row.innerHTML = `
-        <td>${displayChar}</td>
-        <td>${freq}</td>
-        <td>${weight}</td>
-    `;
+            <td>${displayChar}</td>
+            <td>${freq}</td>
+            <td>${weight}</td>
+        `;
         freqTableBody.appendChild(row);
     });
 }
@@ -119,14 +183,20 @@ function updateCodeTable(codeMap) {
 
     sorted.forEach(([char, code]) => {
         const row = document.createElement('tr');
+        row.dataset.char = char;
         const displayChar = char === " " ? "␣" : (char === "\n" ? "↵" : char);
         const colorClass = code.length <= 4 ? "var(--success)" : "var(--danger)";
 
         row.innerHTML = `
-        <td>${displayChar}</td>
-        <td><span class="code-pill" style="color: ${colorClass}">${code}</span></td>
-        <td>${code.length}</td>
-    `;
+            <td>${displayChar}</td>
+            <td><span class="code-pill" style="color: ${colorClass}">${code}</span></td>
+            <td>${code.length}</td>
+        `;
+
+        // Highlight occurrences on hover
+        row.onmouseenter = () => highlightChar(char);
+        row.onmouseleave = () => resetHighlight();
+
         codeTableBody.appendChild(row);
     });
 }
@@ -149,8 +219,31 @@ function updateStats(text, codeMap) {
     progressBar.style.width = savings + "%";
 }
 
+function updateEncodedOutput(text, codeMap) {
+    outputBox.innerHTML = "";
+    for (const char of text) {
+        const span = document.createElement('span');
+        span.className = 'encoded-bit';
+        span.dataset.char = char;
+        span.textContent = codeMap[char];
+        outputBox.appendChild(span);
+    }
+}
+
+function highlightChar(char) {
+    document.querySelectorAll(`.encoded-bit[data-char="${CSS.escape(char)}"]`).forEach(el => {
+        el.classList.add('highlight-active');
+    });
+}
+
+function resetHighlight() {
+    document.querySelectorAll('.highlight-active').forEach(el => {
+        el.classList.remove('highlight-active');
+    });
+}
+
 copyBtn.addEventListener('click', () => {
-    const text = outputBox.textContent;
+    const text = outputBox.innerText;
     if (text === "Binary output will appear here...") return;
 
     navigator.clipboard.writeText(text).then(() => {
@@ -162,7 +255,7 @@ copyBtn.addEventListener('click', () => {
 
 function visualizeTree(root) {
     const svg = d3.select("#tree-svg");
-    svg.selectAll("*").remove(); // Clear previous tree
+    svg.selectAll("*").remove();
 
     const container = document.getElementById('tree-svg');
     const width = container.clientWidth;
@@ -172,26 +265,18 @@ function visualizeTree(root) {
     const g = svg.append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Transform custom Node structure to D3 hierarchy
     const d3Root = d3.hierarchy(root, d => d.left || d.right ? [d.left, d.right].filter(n => n) : null);
-
     const treeLayout = d3.tree().size([width - margin.left - margin.right, height - margin.top - margin.bottom]);
     treeLayout(d3Root);
 
-    // Links
     const links = g.selectAll(".link")
         .data(d3Root.links())
         .enter().append("path")
         .attr("class", "link")
-        .attr("d", d3.linkVertical()
-            .x(d => d.x)
-            .y(d => d.y))
+        .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y))
         .style("opacity", 0)
-        .transition()
-        .duration(800)
-        .style("opacity", 1);
+        .transition().duration(800).style("opacity", 1);
 
-    // Nodes
     const nodes = g.selectAll(".node")
         .data(d3Root.descendants())
         .enter().append("g")
@@ -202,10 +287,7 @@ function visualizeTree(root) {
         .attr("r", 0)
         .style("fill", d => d.data.char !== null ? "var(--accent-secondary)" : "var(--card-bg)")
         .style("stroke", d => d.data.char !== null ? "var(--accent-secondary)" : "var(--accent-primary)")
-        .transition()
-        .duration(500)
-        .delay((d, i) => i * 50)
-        .attr("r", 18);
+        .transition().duration(500).delay((d, i) => i * 50).attr("r", 18);
 
     nodes.append("text")
         .attr("dy", ".35em")
@@ -213,26 +295,49 @@ function visualizeTree(root) {
         .text(d => d.data.char !== null
             ? (d.data.char === " " ? "␣" : (d.data.char === "\n" ? "↵" : d.data.char))
             : d.data.freq)
-        .transition()
-        .duration(500)
-        .delay((d, i) => i * 50 + 200)
-        .style("fill-opacity", 1);
+        .transition().duration(500).delay((d, i) => i * 50 + 200).style("fill-opacity", 1);
 
-    // Add 0/1 labels to links
     g.selectAll(".link-label")
         .data(d3Root.links())
         .enter().append("text")
         .attr("class", "link-label")
         .attr("x", d => (d.source.x + d.target.x) / 2)
         .attr("y", d => (d.source.y + d.target.y) / 2)
-        .attr("dy", -5)
         .attr("text-anchor", "middle")
         .style("fill", "var(--text-dim)")
         .style("font-size", "10px")
-        .text((d, i) => d.source.children[0] === d.target ? "0" : "1")
+        .text(d => d.source.children[0] === d.target ? "0" : "1")
         .style("opacity", 0)
-        .transition()
-        .duration(800)
-        .delay(500)
-        .style("opacity", 1);
+        .transition().duration(800).delay(500).style("opacity", 1);
+}
+
+function visualizePQ(nodesList) {
+    const svg = d3.select("#tree-svg");
+    svg.selectAll("*").remove();
+
+    const width = document.getElementById('tree-svg').clientWidth;
+    const height = document.getElementById('tree-svg').clientHeight;
+
+    const spacing = Math.min(width / (nodesList.length + 1), 100);
+    const startX = (width - (nodesList.length - 1) * spacing) / 2;
+
+    const g = svg.append("g").attr("transform", `translate(0, ${height / 2})`);
+
+    const nodeG = g.selectAll(".pq-node")
+        .data(nodesList, d => d.id)
+        .enter().append("g")
+        .attr("class", "pq-node")
+        .attr("transform", (d, i) => `translate(${startX + i * spacing}, 0)`);
+
+    nodeG.append("circle")
+        .attr("r", 20)
+        .style("fill", "var(--card-bg)")
+        .style("stroke", "var(--accent-primary)")
+        .style("stroke-width", "2px");
+
+    nodeG.append("text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .style("fill", "#fff")
+        .text(d => d.char !== null ? (d.char === " " ? "␣" : d.char) : d.freq);
 }
