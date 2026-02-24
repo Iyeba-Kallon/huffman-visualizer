@@ -32,7 +32,7 @@ Huffman coding is a greedy algorithm that assigns variable-length codes to input
     - Starting from the root, assign `0` for every left branch and `1` for every right branch.
     - The path from the root to each character leaf determines its unique binary code.
 
-## 🛠️ Built With
+##  Built With
 
 - **HTML5**: Semantic structure.
 - **Vanilla CSS**: Modern dark theme and responsive layout.
