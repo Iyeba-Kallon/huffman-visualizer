@@ -185,6 +185,49 @@ button:active {
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 1rem;
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 1px solid var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.secondary-btn:hover {
+    background: rgba(34, 211, 238, 0.1);
+}
+
+.file-input-wrapper {
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.file-input-wrapper input[type=file] {
+    font-size: 100px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.highlight-active {
+    background-color: rgba(168, 85, 247, 0.4) !important;
+    border-radius: 2px;
+    box-shadow: 0 0 4px var(--accent-secondary);
+}
+
+.encoded-bit {
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
 /* Tree Visualization Styles */
 #tree-svg {
     width: 100%;
