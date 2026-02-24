@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huffman Coding Visualizer | Premium Edition</title>
+    <!-- D3.js CDN -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Huffman Coding Visualizer</h1>
+            <p>Advanced Lossless Data Compression Analysis</p>
+        </header>
+
+        <!-- Project Info / Controls -->
+        <section class="card fade-in" style="animation-delay: 0.1s;">
+            <h2>⌨️ Input Text</h2>
+            <textarea id="input-text" placeholder="Type something to compress..."></textarea>
+            <button id="compress-btn">Compress & Visualize</button>
+            <div class="char-info">
+                <span>Chars: <strong id="total-chars">0</strong></span>
+                <span>Unique: <strong id="unique-chars">0</strong></span>
+            </div>
+        </section>
+
+        <!-- Stats Card -->
+        <section class="card fade-in" style="animation-delay: 0.2s;">
+            <h2>📊 Compression Stats</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <p class="stat-label">Original Size</p>
+                    <p class="stat-value"><span id="orig-size">0</span> bits</p>
+                </div>
+                <div class="stat-item">
+                    <p class="stat-label">Compressed Size</p>
+                    <p class="stat-value"><span id="comp-size">0</span> bits</p>
+                </div>
+                <div class="stat-item">
+                    <p class="stat-label">Ratio</p>
+                    <p class="stat-value"><span id="ratio">0.00</span> : 1</p>
+                </div>
+                <div class="stat-item">
+                    <p class="stat-label">Space Saved</p>
+                    <p class="stat-value"><span id="savings">0</span>%</p>
+                </div>
+                <div class="progress-container">
+                    <p class="stat-label">Compression Efficiency</p>
+                    <div class="progress-bar">
+                        <div id="comp-progress" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tree Visualization -->
+        <section class="card full-width fade-in" style="animation-delay: 0.3s;">
+            <h2>🌳 Huffman Tree Visualization</h2>
+            <div id="tree-container">
+                <svg id="tree-svg"></svg>
+            </div>
+        </section>
+
+        <!-- Frequency Table -->
+        <section class="card fade-in" style="animation-delay: 0.4s;">
+            <h2>🧮 Frequency Table</h2>
+            <div class="table-container">
+                <table id="freq-table">
+                    <thead>
+                        <tr>
+                            <th>Char</th>
+                            <th>Frequency</th>
+                            <th>Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Code Table -->
+        <section class="card fade-in" style="animation-delay: 0.5s;">
+            <h2>🔑 Huffman Codes</h2>
+            <div class="table-container">
+                <table id="code-table">
+                    <thead>
+                        <tr>
+                            <th>Char</th>
+                            <th>Code</th>
+                            <th>Length</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Encoded Output -->
+        <section class="card full-width fade-in" style="animation-delay: 0.6s;">
+            <h2>📜 Encoded Output</h2>
+            <div id="output-text" class="output-box">Binary output will appear here...</div>
+            <button id="copy-btn" class="copy-btn">📋 Copy Binary Data</button>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
