@@ -39,11 +39,4 @@ Huffman coding is a greedy algorithm that assigns variable-length codes to input
 - **Vanilla JavaScript**: Core Huffman logic and state management.
 - **D3.js**: High-performance SVG tree visualization and animations.
 
-## 📈 Improvement Ideas
 
-- **Step-by-Step Step Mode**: A "Next Step" button to manually advance the tree merging process.
-- **Import/Export**: Load text files directly or export the compressed binary stream.
-- **Interactive Highlighting**: Hover over a code to see where that character appears in the original text.
-
----
-*Created as a portfolio-ready educational tool.*
